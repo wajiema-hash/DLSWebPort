@@ -1,57 +1,115 @@
 <!DOCTYPE html>
 <html lang="en-us">
   <head>
-    <base href="https://cdn.jsdelivr.net/gh/thecheetoman/DLSWebPort/">
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Unity WebGL Player | Digital Logic Sim</title>
-	<style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Digital Logic Sim</title>
+    <style>
       html, body {
         margin: 0;
         padding: 0;
         height: 100%;
-        background: #000;
+        background: #1a1a2e;
         overflow: hidden;
       }
 
       #unity-canvas {
         width: 100%;
-        min-height: 100%;
+        height: 100%;
         margin: 0;
         border: none;
-        background: #000;
+        background: #1a1a2e;
+        display: block;
+      }
+
+      #loading-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #1a1a2e;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #e0e0e0;
+        font-family: system-ui, -apple-system, sans-serif;
+        z-index: 100;
+        transition: opacity 0.5s ease;
+      }
+
+      #loading-screen.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .loading-title {
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 24px;
+        letter-spacing: 0.5px;
+      }
+
+      .loading-bar-container {
+        width: 260px;
+        height: 6px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+        overflow: hidden;
+      }
+
+      .loading-bar {
+        width: 0%;
+        height: 100%;
+        background: #4fc3f7;
+        border-radius: 3px;
+        transition: width 0.2s ease;
+      }
+
+      .loading-text {
+        margin-top: 12px;
+        font-size: 13px;
+        color: #9e9e9e;
       }
     </style>
   </head>
-  <body style="text-align: center; padding: 0; border: 0; margin: 0;">
+  <body>
     <canvas id="unity-canvas"></canvas>
-    <script src="Build/DLS.loader.js"></script>
+    <div id="loading-screen">
+      <div class="loading-title">Digital Logic Sim</div>
+      <div class="loading-bar-container">
+        <div class="loading-bar" id="loading-bar"></div>
+      </div>
+      <div class="loading-text" id="loading-text">Loading…</div>
+    </div>
+    <script src="/Build/DLS.loader.js"></script>
     <script>
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        // Mobile device style: fill the whole browser client area with the game canvas:
-        var meta = document.createElement('meta');
-        meta.name = 'viewport';
-        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
-        document.getElementsByTagName('head')[0].appendChild(meta);
+      const canvas = document.querySelector('#unity-canvas');
+      const loadingScreen = document.querySelector('#loading-screen');
+      const loadingBar = document.querySelector('#loading-bar');
+      const loadingText = document.querySelector('#loading-text');
 
-        var canvas = document.querySelector("#unity-canvas");
-        canvas.style.width = "100%";
-        canvas.style.height = "100%";
-        canvas.style.position = "fixed";
-
-        document.body.style.textAlign = "left";
+      function onProgress(progress) {
+        const pct = Math.round(progress * 100);
+        loadingBar.style.width = pct + '%';
+        loadingText.textContent = pct < 100 ? 'Loading… ' + pct + '%' : 'Starting…';
       }
 
-      createUnityInstance(document.querySelector("#unity-canvas"), {
-        dataUrl: "Build/DLS.data.unityweb",
-        frameworkUrl: "Build/DLS.framework.js.unityweb",
-        codeUrl: "Build/DLS.wasm.unityweb",
-        streamingAssetsUrl: "StreamingAssets",
-        companyName: "SebastianLague",
-        productName: "Digital Logic Sim",
-        productVersion: "1.0.2",
-        // matchWebGLToCanvasSize: false, // Uncomment this to separately control WebGL canvas render size and DOM element size.
-        // devicePixelRatio: 1, // Uncomment this to override low DPI rendering on high DPI displays.
+      createUnityInstance(canvas, {
+        dataUrl: '/Build/DLS.data.unityweb',
+        frameworkUrl: '/Build/DLS.framework.js.unityweb',
+        codeUrl: '/Build/DLS.wasm.unityweb',
+        streamingAssetsUrl: 'StreamingAssets',
+        companyName: 'SebastianLague',
+        productName: 'Digital Logic Sim',
+        productVersion: '1.0.2',
+      }, onProgress).then(() => {
+        loadingScreen.classList.add('hidden');
+      }).catch((err) => {
+        loadingText.textContent = 'Failed to load. Please refresh.';
+        console.error(err);
       });
     </script>
   </body>
